@@ -1,0 +1,50 @@
+---
+name: audit
+
+"on":
+  push:
+  pull_request:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tests
+        run: python -m unittest discover -s tests -v
+      - name: Public package audit
+        run: python scripts/audit_public_package.py --root .
+      - name: Release candidate build and audit
+        run: |
+          python scripts/make_release_candidate.py \
+            --root . \
+            --out-dir /tmp/wsl-vhdx-compactor-ci-rc \
+            --label ci \
+            --overwrite
+          python scripts/audit_public_package.py \
+            --root /tmp/wsl-vhdx-compactor-ci-rc/wsl-vhdx-compactor-ci
+          python - <<'PY'
+          import tarfile
+
+          archive = "/tmp/wsl-vhdx-compactor-ci-rc/wsl-vhdx-compactor-ci.tar.gz"
+          with tarfile.open(archive, "r:gz") as handle:
+              names = handle.getnames()
+          duplicates = len(names) - len(set(names))
+          assert duplicates == 0, f"duplicate tar members: {duplicates}"
+          print(f"tarball members={len(names)} duplicates={duplicates}")
+          PY
+      - name: PowerShell parse
+        shell: pwsh
+        run: |
+          $readinessPath = "scripts/Test-WslVhdxCompactionReadiness.ps1"
+          $compactionPath = "scripts/Invoke-WslVhdxCompaction.ps1"
+          $readiness = Get-Content -Raw $readinessPath
+          $compaction = Get-Content -Raw $compactionPath
+          $null = [scriptblock]::Create($readiness)
+          $null = [scriptblock]::Create($compaction)
+          "PowerShell parse OK"
