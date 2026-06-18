@@ -1,5 +1,5 @@
 {
-  "candidate": "wsl-vhdx-compactor-release-quality-knowledge-readme-v2-20260617",
+  "candidate": "wsl-vhdx-compactor-public-readme-final",
   "files": [
     {
       "bytes": 1692,
@@ -12,9 +12,9 @@
       "sha256": "a54c10f8faff5c8677da2d86d8eda9349eb5e47c4e316b324b8e9552492f9e7c"
     },
     {
-      "bytes": 403,
+      "bytes": 381,
       "path": "CHANGELOG.md",
-      "sha256": "6f7e333c63b00273eddaef4a4f2184e197ddb5e9a18269f99974cdf72b9caa73"
+      "sha256": "77e2785d3e8f45c203e80b6b935f206b3260c879bbf0fc43443dd20f2cd9afea"
     },
     {
       "bytes": 580,
@@ -27,14 +27,14 @@
       "sha256": "82df06c4b79c0ff37ca35da309ca66373b29019421c0927bb0f461bb6b090a43"
     },
     {
-      "bytes": 3526,
+      "bytes": 3354,
       "path": "PUBLICATION_CHECKLIST.md",
-      "sha256": "cfcc6e216de216e96e60f007844d1f167564dd54ea5491ca828d8ec9b64da29e"
+      "sha256": "e9ac03806d3984338272ca3c663ff979ede687e49f66e5729378559140503756"
     },
     {
-      "bytes": 6385,
+      "bytes": 8098,
       "path": "README.md",
-      "sha256": "7f1fd989b6a61d207585f578064b834a5b69c516900c5b2ca2fc5a42adbc484b"
+      "sha256": "b1e4e6278525e8022e756f872132c01e72851e540ad37e3c75736341dc4d379f"
     },
     {
       "bytes": 533,
@@ -47,14 +47,14 @@
       "sha256": "0199c30b3ef43e457183c9e2bc91191e169195b4a17320365a6a75f7185b64fb"
     },
     {
-      "bytes": 1569,
+      "bytes": 1324,
       "path": "docs/github-transfer.md",
-      "sha256": "64c032da4cfc0c3b5b2601b525172daa8fdae951ac3f0164d4fe43005fcaa853"
+      "sha256": "409520bf29d050379d5f0ac98f383be3a20f1c8b246a02938b2d33545a81625d"
     },
     {
-      "bytes": 662,
+      "bytes": 645,
       "path": "docs/privacy.md",
-      "sha256": "8a04c3673e5bfa606e4f9b0eb733082d0c498ba027b3f65ea50e228c4fa5a904"
+      "sha256": "52bd2322ab5933776c953c97c8b4db7d7df9d9629b02ede6d6f24f4dee8f53d3"
     },
     {
       "bytes": 4942,
@@ -87,7 +87,7 @@
       "sha256": "0a77993d79ea4aa615cb9df8bc07a26fb54acaad2060cb6c3dea4f2494e0bcc5"
     }
   ],
-  "generated_at_utc": "2026-06-17T20:11:12+00:00",
+  "generated_at_utc": "2026-06-18T18:41:09+00:00",
   "package": "wsl-vhdx-compactor",
   "source_file_count": 17,
   "version": "0.1.0"

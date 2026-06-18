@@ -18,5 +18,5 @@ Public examples should use placeholders:
 C:\Users\<WindowsUser>\AppData\Local\Packages\<DistroPackage>\LocalState\ext4.vhdx
 ```
 
-The package should not include private production logs, raw Codex transcripts,
-credentials, browser profiles, account data, or proprietary project details.
+The package should not include private logs, raw transcripts, credentials,
+browser profiles, account data, or proprietary project details.

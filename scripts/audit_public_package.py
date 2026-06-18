@@ -6,7 +6,8 @@ import json
 import re
 
 
-SKIP_DIRS = {".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", "build", "dist", ".venv"}
+VCS_DIRS = {".git"}
+SKIP_DIRS = {".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", "build", "dist", ".venv"}
 GENERATED_DIR_SUFFIXES = (".egg-info", ".dist-info")
 GENERATED_FILE_SUFFIXES = {".pyc", ".pyo"}
 TEXT_EXTENSIONS = {"", ".md", ".ps1", ".py", ".txt", ".yml", ".yaml", ".json", ".toml"}
@@ -38,6 +39,8 @@ def scan(root: Path) -> dict[str, object]:
     scanned_files = 0
     for path in root.rglob("*"):
         rel_parts = path.relative_to(root).parts
+        if any(part in VCS_DIRS for part in rel_parts):
+            continue
         has_generated_parent = any(
             part in SKIP_DIRS or part.endswith(GENERATED_DIR_SUFFIXES)
             for part in rel_parts[:-1]

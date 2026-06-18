@@ -1,83 +1,97 @@
 # WSL VHDX Compactor
 
-Windows-side tooling for diagnosing and compacting oversized WSL2
-`ext4.vhdx` files.
+Shrink a WSL2 distro's `ext4.vhdx` from Windows after deleting files inside
+Linux.
 
-WSL can free space inside Linux before Windows recovers the same space from the
-virtual disk file. A common pattern looks like this:
+WSL can show free space inside the Linux filesystem while Windows still shows a
+large virtual disk file. This package helps you find the right WSL VHDX, inspect
+the exact DiskPart commands that would run, and compact the selected VHDX with a
+dry-run-first workflow.
 
-- Large files are deleted inside WSL.
-- `df` inside WSL shows the Linux filesystem has more free space.
-- Windows still shows low free space because the distro's `ext4.vhdx` file is
-  still large.
-
-This package helps with the Windows-side compaction step for that VHDX file.
-
-This is not official Microsoft, OpenAI, or WSL software. It does not delete
-files inside WSL, and it does not guarantee that compaction will reclaim space.
+This is not official Microsoft or WSL software. It does not delete Linux files,
+does not choose a VHDX for you, and does not guarantee that compaction will
+reclaim space.
 
 ## Status
 
-This package is a release-quality candidate accepted with publication
-conditions. Source checks, clean release-candidate checks, quote-safe DiskPart
-rendering, and an elevated Windows dry run have passed. Real compaction has not
-been claimed as package evidence. Publication, repository creation, tagging,
-uploading, or release approval remains controlled by the release owner.
+`0.1.0`
+
+This is a local maintenance utility. Use the dry run and render-only modes
+before running real compaction, and keep a current backup of important distro
+data.
+
+## Why This Exists
+
+After large files are removed inside WSL, the Linux filesystem can report more
+free space, but the Windows-side `ext4.vhdx` file can remain large. Windows disk
+usage improves only after the virtual disk is compacted.
+
+This tool is for that Windows-side maintenance step.
+
+## Who Should Use It
+
+Use this package if you:
+
+- use WSL2 on Windows;
+- can identify the distro VHDX you want to compact;
+- are comfortable running an elevated 64-bit PowerShell session;
+- have backed up anything important inside the distro;
+- want a dry run before any WSL shutdown or DiskPart action.
+
+Do not use it if you are unsure which VHDX belongs to the distro you care about.
 
 ## What It Does
 
-- Reports whether the current PowerShell session is elevated and 64-bit.
-- Searches for candidate WSL `ext4.vhdx` files under the Windows package
-  directory.
-- Requires an explicit VHDX path before any compaction flow can run.
+- Checks whether PowerShell is running as Administrator and as a 64-bit process.
+- Lists candidate WSL `ext4.vhdx` files under the Windows package directory.
+- Requires an explicit `-VhdPath` before any compaction flow can run.
 - Generates an ASCII DiskPart script with the VHDX path quoted.
 - Rejects VHDX paths containing embedded double quotes.
-- Supports dry-run output before WSL shutdown or DiskPart execution.
-- Can write a PowerShell transcript when `-TranscriptPath` is supplied.
-- For a real compaction run, shuts down WSL, attaches the VHDX read-only,
-  runs `compact vdisk`, detaches the VHDX, reports byte counts, and warms WSL
+- Supports a dry run before WSL shutdown or DiskPart execution.
+- Writes a PowerShell transcript when `-TranscriptPath` is supplied.
+- For a real run, shuts down WSL, attaches the VHDX read-only, runs
+  `compact vdisk`, detaches the VHDX, reports byte counts, and warms WSL
   afterward unless `-SkipWarmWsl` is used.
 - Attempts a best-effort detach recovery command if DiskPart exits non-zero
   after the main DiskPart flow starts.
 
 ## What It Does Not Do
 
-- It does not delete Linux files.
-- It does not choose a VHDX automatically for compaction.
-- It does not run without an explicit `-VhdPath`.
-- It does not back up the VHDX or the WSL distro.
+- It does not delete files inside WSL.
+- It does not select a VHDX automatically for compaction.
+- It does not run compaction without an explicit `-VhdPath`.
+- It does not back up the VHDX or distro.
 - It does not promise a smaller file after compaction.
-- It does not prove that every Windows, WSL, distro, filesystem, or storage
-  configuration is safe.
+- It does not prove every Windows, WSL, distro, filesystem, or storage setup is
+  safe.
 
-## Safety Model
+## Requirements
 
-Use this tool only from a 64-bit Windows PowerShell session opened with
-**Run as Administrator**.
+- Windows with WSL2.
+- 64-bit Windows PowerShell.
+- Administrator PowerShell for dry-run validation and real compaction.
+- `wsl.exe` and `diskpart.exe` available on `PATH`.
+- A known WSL2 `ext4.vhdx` path.
+- A current backup for any important distro data.
 
-The compaction flow is deliberately explicit:
+The examples below use placeholders. Replace them with your own Windows user
+and distro package path.
 
-1. Run the readiness check and identify the intended distro VHDX.
-2. Run a dry run against the exact VHDX path.
-3. Review the generated DiskPart script and transcript.
-4. Make sure important WSL data is backed up.
-5. Run real compaction only when the selected VHDX path is correct.
-
-During a real compaction run, the script runs `wsl.exe --shutdown`, attaches the
-selected VHDX read-only, runs `compact vdisk`, detaches the VHDX, and then
-starts WSL again with a lightweight warm-up command unless disabled.
+```text
+C:\Users\<WindowsUser>\AppData\Local\Packages\<DistroPackage>\LocalState\ext4.vhdx
+```
 
 ## Quick Start
 
-Open 64-bit Windows PowerShell as Administrator.
+Open **64-bit Windows PowerShell as Administrator** from the package root.
 
-From the package root, find candidate WSL VHDX files:
+Find candidate WSL VHDX files:
 
 ```powershell
 .\scripts\Test-WslVhdxCompactionReadiness.ps1
 ```
 
-Dry run the exact VHDX path:
+Run a dry run against the exact VHDX path:
 
 ```powershell
 .\scripts\Invoke-WslVhdxCompaction.ps1 `
@@ -86,7 +100,7 @@ Dry run the exact VHDX path:
   -DryRun
 ```
 
-Inspect the DiskPart script without shutdown or disk action:
+Inspect the DiskPart script without WSL shutdown or disk action:
 
 ```powershell
 .\scripts\Invoke-WslVhdxCompaction.ps1 `
@@ -94,13 +108,28 @@ Inspect the DiskPart script without shutdown or disk action:
   -RenderDiskPartScriptOnly
 ```
 
-Run compaction only after the dry run points to the correct VHDX:
+Run real compaction only after the dry run points to the correct VHDX:
 
 ```powershell
 .\scripts\Invoke-WslVhdxCompaction.ps1 `
   -VhdPath 'C:\Users\<WindowsUser>\AppData\Local\Packages\<DistroPackage>\LocalState\ext4.vhdx' `
   -TranscriptPath "$env:TEMP\wsl-vhdx-compact.txt"
 ```
+
+## Safety Workflow
+
+1. Run the readiness check.
+2. Identify the intended distro VHDX.
+3. Back up important data inside the distro.
+4. Run the dry run.
+5. Read the generated DiskPart script.
+6. Confirm the path is the intended `ext4.vhdx`.
+7. Close WSL terminals, Docker Desktop, editors, and other tools using WSL.
+8. Run real compaction only after the checks above pass.
+
+During a real compaction run, the script runs `wsl.exe --shutdown`, attaches the
+selected VHDX read-only, runs `compact vdisk`, detaches the VHDX, then starts
+WSL again with a lightweight warm-up command unless disabled.
 
 ## Expected Output
 
@@ -122,19 +151,19 @@ A successful real compaction run should additionally show:
 - `SavedBytes=<number>`
 - WSL starts afterward
 
-`SavedBytes` can be `0` even when DiskPart succeeds. That means this run did
-not find reclaimable blocks in the selected VHDX.
+`SavedBytes` can be `0` even when DiskPart succeeds. That means this run did not
+find reclaimable blocks in the selected VHDX.
 
-## When To Stop
+## Stop Conditions
 
-Stop and check `docs/failure-modes.md` if:
+Stop and read [failure modes](docs/failure-modes.md) if:
 
-- the script reports `IsAdmin=False`
-- the script reports `Is64BitProcess=False`
-- the selected VHDX path is not the intended distro
-- DiskPart cannot attach or detach the VHDX
-- detach recovery exits non-zero
-- `AfterBytes` is the same as `BeforeBytes` and you expected reclaimed space
+- the script reports `IsAdmin=False`;
+- the script reports `Is64BitProcess=False`;
+- the selected VHDX path is not the intended distro;
+- DiskPart cannot attach or detach the VHDX;
+- detach recovery exits non-zero;
+- `AfterBytes` is the same as `BeforeBytes` and you expected reclaimed space.
 
 If detach recovery exits non-zero, reboot Windows before retrying. Do not keep
 rerunning compaction against a VHDX that may still be attached or held.
@@ -147,17 +176,27 @@ package identifiers, absolute paths, disk sizes, and local tool context.
 Do not publish raw transcripts. Redact local usernames, hostnames, absolute
 paths, project names, and storage details before opening a public issue.
 
-See `docs/privacy.md`.
+See [privacy guidance](docs/privacy.md).
 
-## Release Candidate Checks
+## Development
 
-Before public transfer or upload, rebuild a clean candidate from the package
-folder and audit that generated tree:
+Run the package tests:
 
 ```bash
 python -B -m unittest discover -s tests -p '*test*.py' -v
-python scripts/make_release_candidate.py --root . --out-dir /tmp/wsl-vhdx-compactor-rc --label rc1
-python scripts/audit_public_package.py --root /tmp/wsl-vhdx-compactor-rc/wsl-vhdx-compactor-rc1
+```
+
+Audit the public package surface:
+
+```bash
+python -B scripts/audit_public_package.py --root .
+```
+
+Build and audit a clean package tree:
+
+```bash
+python -B scripts/make_release_candidate.py --root . --out-dir /tmp/wsl-vhdx-compactor-build --label local
+python -B scripts/audit_public_package.py --root /tmp/wsl-vhdx-compactor-build/wsl-vhdx-compactor-local
 ```
 
 The PowerShell render tests skip automatically when `pwsh` is unavailable. When
@@ -165,13 +204,34 @@ The PowerShell render tests skip automatically when `pwsh` is unavailable. When
 DiskPart script and paths containing embedded double quotes are rejected before
 any shutdown or disk action.
 
-Do not publish directly from a dirty parent worktree. Transfer only this package
-folder or a freshly rebuilt clean release candidate.
+## Repository Map
 
-## More Documentation
+- [`scripts/Test-WslVhdxCompactionReadiness.ps1`](scripts/Test-WslVhdxCompactionReadiness.ps1): readiness and candidate-VHDX diagnostics.
+- [`scripts/Invoke-WslVhdxCompaction.ps1`](scripts/Invoke-WslVhdxCompaction.ps1): dry-run, render-only, and compaction workflow.
+- [`docs/failure-modes.md`](docs/failure-modes.md): common failures and what to do next.
+- [`docs/privacy.md`](docs/privacy.md): transcript and path-redaction guidance.
+- [`CHANGELOG.md`](CHANGELOG.md): package changes.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): contribution and public-safety rules.
+- [`SECURITY.md`](SECURITY.md): security-reporting guidance.
 
-- Failure modes: `docs/failure-modes.md`
-- Privacy guidance: `docs/privacy.md`
-- GitHub transfer guide: `docs/github-transfer.md`
-- Publication checklist: `PUBLICATION_CHECKLIST.md`
-- Changelog: `CHANGELOG.md`
+## Security
+
+This tool can shut down WSL and run DiskPart when used for real compaction. Treat
+that as a privileged local maintenance action.
+
+Report security issues privately to the maintainers. Do not include raw
+transcripts, unredacted local paths, credentials, cookies, browser profiles, or
+account data in public issues.
+
+See [SECURITY.md](SECURITY.md).
+
+## Contributing
+
+Contributions must use synthetic paths and public-safe examples only. Before
+proposing changes, run the tests and package audit above.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+MIT. See [LICENSE](LICENSE).
