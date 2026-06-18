@@ -7,6 +7,7 @@ This tool reclaims that wasted space with a safe, dry-run-first workflow.
 > **Not official Microsoft or WSL software.** Compaction does not always reclaim space — `SavedBytes` can be 0 even on a successful run.
 
 We recommend using your Codex agent to help you apply this tool. Share the repo with them and ask them to guide you through the process.
+
 ---
 
 ## Quick Start
