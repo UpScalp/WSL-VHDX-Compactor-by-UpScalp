@@ -1,9 +1,12 @@
 # WSL VHDX Compactor
 
-WSL2 stores each Linux distro in a virtual disk file (`ext4.vhdx`) on your Windows drive. That file grows as you use WSL — but never shrinks when you delete files inside Linux. This tool reclaims that wasted space with a safe, dry-run-first workflow.
+WSL2 stores each Linux distro in a virtual disk file (`ext4.vhdx`) on your Windows drive. That file grows as you use WSL. However, it never shrinks when you delete files inside Linux. 
+
+This tool reclaims that wasted space with a safe, dry-run-first workflow.
 
 > **Not official Microsoft or WSL software.** Compaction does not always reclaim space — `SavedBytes` can be 0 even on a successful run.
 
+We recommend using your Codex agent to help you apply this tool. Share the repo with them and ask them to guide you through the process.
 ---
 
 ## Quick Start
@@ -51,7 +54,7 @@ C:\Users\<WindowsUser>\AppData\Local\Packages\<DistroPackage>\LocalState\ext4.vh
 
 ## Safety Workflow
 
-Follow these steps in order before running real compaction:
+Follow these steps in order before running real compaction.
 
 1. Run the readiness check.
 2. Identify the intended distro VHDX.
@@ -102,7 +105,7 @@ BeforeBytes=<number>
 DryRun=True
 ```
 
-...plus a generated DiskPart script containing `select vdisk`, `attach vdisk readonly`, `compact vdisk`, `detach vdisk`, and `exit`.
+It should also show a generated DiskPart script containing `select vdisk`, `attach vdisk readonly`, `compact vdisk`, `detach vdisk`, and `exit`.
 
 A successful real compaction run should additionally show:
 
@@ -114,7 +117,9 @@ AfterBytes=<number>
 SavedBytes=<number>
 ```
 
-WSL starts afterward. **`SavedBytes` can be 0 even when DiskPart succeeds** — this means the run found no reclaimable blocks in the selected VHDX.
+WSL starts afterward. 
+
+**`SavedBytes` can be 0 even when DiskPart succeeds**. This means the run found no reclaimable blocks in the selected VHDX.
 
 ---
 
@@ -206,4 +211,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution and public-safety rules.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+This tool uses an MIT license. See [LICENSE](LICENSE) for more details.
