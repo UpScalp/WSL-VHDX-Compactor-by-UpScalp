@@ -134,6 +134,21 @@ class MakeReleaseCandidateTests(unittest.TestCase):
             self.assertEqual(result["failures"][0]["kind"], "generated_artifact")
             self.assertEqual(result["failures"][0]["file"], "src/example_package.egg-info")
 
+    def test_public_audit_rejects_user_home_paths(self) -> None:
+        builder = _load_release_builder()
+        audit = builder._load_audit_scan()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "probe.txt").write_text(
+                "/home/" + "exam" + "ple-user/private.txt\n",
+                encoding="utf-8",
+            )
+
+            result = audit(root)
+
+            self.assertFalse(result["ok"], result)
+            self.assertEqual(result["failures"][0]["kind"], "private_marker")
+
 
 if __name__ == "__main__":
     unittest.main()

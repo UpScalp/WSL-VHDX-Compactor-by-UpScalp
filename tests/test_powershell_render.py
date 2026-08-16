@@ -8,6 +8,7 @@ import unittest
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = PACKAGE_ROOT / "scripts" / "Invoke-WslVhdxCompaction.ps1"
+WINDOWS_USER_ROOT = "C:" + "\\Users\\" + "Example User"
 
 
 class PowerShellRenderTests(unittest.TestCase):
@@ -33,7 +34,7 @@ class PowerShellRenderTests(unittest.TestCase):
         )
 
     def test_render_quotes_vhdx_paths_with_spaces(self) -> None:
-        vhd_path = r"C:\Users\Example User\AppData\Local\Packages\ExampleDistro\LocalState\ext4.vhdx"
+        vhd_path = WINDOWS_USER_ROOT + r"\AppData\Local\Packages\ExampleDistro\LocalState\ext4.vhdx"
 
         result = self._render(vhd_path)
 
@@ -44,7 +45,7 @@ class PowerShellRenderTests(unittest.TestCase):
         self.assertIn("detach vdisk", result.stdout)
 
     def test_render_rejects_embedded_double_quote(self) -> None:
-        result = self._render(r'C:\Users\Example User\Bad"Path\ext4.vhdx')
+        result = self._render(WINDOWS_USER_ROOT + '\\Bad"Path\\ext4.vhdx')
 
         self.assertNotEqual(result.returncode, 0, result.stdout)
         combined_output = f"{result.stdout}\n{result.stderr}"
